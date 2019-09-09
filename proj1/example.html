@@ -1,0 +1,330 @@
+<script>
+function main(){
+				var c= initializeCanvas("canvasA", 300, 300);
+				drawHouses(c);
+								
+				var c= initializeCanvas("canvasB", 300, 300);
+				animatePolygons(c);
+				c.addEventListener('mousedown',function(e){
+					POLYGONS_LOCATION=getCursorPosition(e);
+				});
+				
+				var c= initializeCanvas("canvasC", 300, 300);
+				animateParticles(c);
+			}
+			
+			class Particle{
+				constructor(location, velocity){
+					this.location=location;
+					this.velocity=velocity;
+				}
+				
+				draw(canvas){
+					drawRegularPolygon(canvas,this.location,3,8);
+				}
+			}
+			
+			var PARTICLES=[];
+			var SUN = [150,150];
+			var G=10;
+			function animateParticles(canvas){
+				for(var i=0;i<50;i++){
+					var location=[
+						Math.random()*300,
+						Math.random()*300
+					]
+					var velocity=[
+						Math.random()-0.5,
+						Math.random()-0.5
+					]
+					var part = new Particle(location, velocity);
+					PARTICLES.push(part);
+				}
+				
+				setInterval(function(){
+					clearCanvas(canvas);
+					
+					//move particles
+					for(var i=0;i<PARTICLES.length;i++){
+						var sunVector=subtractVectors(SUN,PARTICLES[i].location);
+						var normalizedSunVector=normalizeVector(sunVector);
+						var magn=getMagnitude(sunVector);
+						var sunForceVector=scaleVector(normalizedSunVector,G/(magn*magn))
+						
+						PARTICLES[i].velocity=addVectors(PARTICLES[i].velocity,sunForceVector);
+						
+						PARTICLES[i].location=addVectors(PARTICLES[i].location,PARTICLES[i].velocity);
+					}
+					
+					for(var i=0;i<PARTICLES.length;i++){
+						PARTICLES[i].draw(canvas);
+					}
+					
+					drawRegularPolygon(canvas,SUN,10,16);
+				},10);
+			}
+			
+			function scaleVector(vector, scaler){
+				var newV=[
+					vector[0]*scaler,
+					vector[1]*scaler
+				];
+				return newV;
+			}
+			
+			function getMagnitude(vector){
+				return Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]);
+			}
+			
+			function normalizeVector(vector){
+				var magn=getMagnitude(vector);
+				var newV=[
+					vector[0]/magn,
+					vector[1]/magn
+				];
+				return newV;
+			}
+			
+			function addVectors(v1,v2){
+				var newV=[
+					v1[0]+v2[0],
+					v1[1]+v2[1]
+				];
+				return newV;
+			}
+			function subtractVectors(v1,v2){
+				var newV=[
+					v1[0]-v2[0],
+					v1[1]-v2[1]
+				];
+				return newV;
+			}
+			
+			function getCursorPosition(event){
+				console.log(event);
+				var canvas=event.target;
+				var rect = canvas.getBoundingClientRect();
+				var x=event.clientX - rect.left;
+				var y=event.clientY - rect.top;
+				return [x,y];
+			}
+			
+			var POLYGONS_LOCATION=[150,150];
+			function animatePolygons(canvas){
+				var size=100;
+				var yLocation=150;
+				var rotation=0;
+				setInterval(function(){
+					clearCanvas(canvas);
+					
+					size=100
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,4,rotation);
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,8,rotation);
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,16,rotation);
+					
+					size=70
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,4,-rotation);
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,8,-rotation);
+					drawRegularPolygon(canvas,POLYGONS_LOCATION,size,16,-rotation);
+					
+					
+					rotation+=Math.PI/100;
+					
+					// just for demo
+					//yLocation--;
+					//size--;
+				},100); // milliseconds
+				
+				//drawRegularPolygon(canvas,[150,150],100,8);
+				//drawRegularPolygon(canvas,[150,150],100,12);
+			}
+			
+			function clearCanvas(canvas){
+				var ctx = canvas.getContext("2d");
+				ctx.clearRect(0,0,300,300);
+			}
+			
+			function initializeCanvas(canvasID,width,height){
+				var c = document.getElementById(canvasID);
+				var ctx = c.getContext("2d");
+				ctx.canvas.width=width;
+				ctx.canvas.height=height;
+				return c;
+			}
+			
+			function drawHouses(c){
+				var param=generateHouseParameters();
+				var blur=4;
+				drawHouse(c, [150,70], 0.4,param, blur)
+				param=generateHouseParameters();
+				drawHouse(c, [50,70], 0.4,param,blur)
+				param=generateHouseParameters();
+				drawHouse(c, [280,70], 0.4,param,blur)
+				
+				blur=2;
+				param=generateHouseParameters();
+				drawHouse(c, [170,120], 0.7,param, blur)
+				param=generateHouseParameters();
+				drawHouse(c, [60,120], 0.7,param, blur)
+				param=generateHouseParameters();
+				drawHouse(c, [260,120], 0.7,param, blur)
+				
+				blur=0;
+				param=generateHouseParameters();
+				drawHouse(c, [90,190], 1,param, blur)
+				param=generateHouseParameters();
+				drawHouse(c, [210,190], 1,param, blur)
+			}
+			
+			function generateHouseParameters(){
+				return {
+					wallColor:getRandomColor(),
+					roofColor:getRandomColor(),
+					showWindow:Math.random()<0.5?true:false,
+					showDoor:Math.random()<0.5?true:false
+				}
+			}
+			
+			function drawHouseAsImage(canvas, location){
+				var ctx = canvas.getContext("2d");
+				var img = new Image;
+				img.src = "house.png"
+				var size=100;
+				img.onload = function(){
+					ctx.drawImage(img,location[0]-size/2,location[1]-size*0.5,size,size);
+				}
+			}
+			
+			function getRandomColor(){
+				var red=Math.round(Math.random()*255);
+				var green=Math.round(Math.random()*255);
+				var blue=Math.round(Math.random()*255);
+				return "rgb("+red+","+green+","+blue+")"
+			}	
+			
+			function drawHouse(canvas, location, size, param, blur){
+				var ctx = canvas.getContext("2d");
+				
+				ctx.filter = 'blur('+blur+'px)';
+				// the wall
+				ctx.beginPath();
+				ctx.moveTo(-50*size+location[0], 50*size+location[1]);
+				ctx.lineTo(50*size+location[0], 50*size+location[1]);
+				ctx.lineTo(50*size+location[0], -20*size+location[1]);
+				ctx.lineTo(-50*size+location[0], -20*size+location[1]);
+				ctx.lineTo(-50*size+location[0], 50*size+location[1]);
+				ctx.fillStyle=param["wallColor"];
+				ctx.fill();
+				ctx.stroke();
+				
+				// the roof
+				ctx.beginPath();
+				ctx.moveTo(-50*size+location[0], -20*size+location[1]);
+				ctx.lineTo(50*size+location[0], -20*size+location[1]);
+				ctx.lineTo(0*size+location[0], -60*size+location[1]);
+				ctx.lineTo(-50*size+location[0], -20*size+location[1]);
+				ctx.fillStyle=param["roofColor"];
+				ctx.fill();
+				ctx.stroke();
+				
+				
+				if(param["showDoor"]==true){
+					// the door
+					ctx.beginPath();
+					ctx.moveTo(-30*size+location[0], 50*size+location[1]);
+					ctx.lineTo(-10*size+location[0], 50*size+location[1]);
+					ctx.lineTo(-10*size+location[0], 10*size+location[1]);
+					ctx.lineTo(-30*size+location[0], 10*size+location[1]);
+					ctx.lineTo(-30*size+location[0], 50*size+location[1]);
+					ctx.fillStyle="brown";
+					ctx.fill();
+					ctx.stroke();
+				}
+				
+				if(param["showWindow"]==true){
+					// the window
+					ctx.beginPath();
+					ctx.moveTo(10*size+location[0], 20*size+location[1]);
+					ctx.lineTo(40*size+location[0], 20*size+location[1]);
+					ctx.lineTo(40*size+location[0], -10*size+location[1]);
+					ctx.lineTo(10*size+location[0], -10*size+location[1]);
+					ctx.lineTo(10*size+location[0], 20*size+location[1]);
+					ctx.fillStyle="lightblue";
+					ctx.fill();
+					ctx.stroke();
+				}
+			}
+			
+			function drawHouseTranslatingCanvas(canvas){
+				var ctx = canvas.getContext("2d");
+				ctx.translate(150,150)
+				//ctx.rotate(Math.PI/4)
+				// the wall
+				ctx.beginPath();
+				ctx.moveTo(-50, 50);
+				ctx.lineTo(50, 50);
+				ctx.lineTo(50, -20);
+				ctx.lineTo(-50, -20);
+				ctx.lineTo(-50, 50);
+				ctx.fillStyle="rgb(0,0,255)";
+				ctx.fill();
+				ctx.stroke();
+				
+				// the roof
+				ctx.beginPath();
+				ctx.moveTo(-50, -20);
+				ctx.lineTo(50, -20);
+				ctx.lineTo(0, -60);
+				ctx.lineTo(-50, -20);
+				ctx.fillStyle="#FF0000";
+				ctx.fill();
+				ctx.stroke();
+				
+				
+				// the door
+				ctx.beginPath();
+				ctx.moveTo(-30, 50);
+				ctx.lineTo(-10, 50);
+				ctx.lineTo(-10, 10);
+				ctx.lineTo(-30, 10);
+				ctx.lineTo(-30, 50);
+				ctx.fillStyle="brown";
+				ctx.fill();
+				ctx.stroke();
+				
+				// the window
+				ctx.beginPath();
+				ctx.moveTo(10, 20);
+				ctx.lineTo(40, 20);
+				ctx.lineTo(40, -10);
+				ctx.lineTo(10, -10);
+				ctx.lineTo(10, 20);
+				ctx.fillStyle="lightblue";
+				ctx.fill();
+				ctx.stroke();
+				
+				
+				ctx.translate(-150,-150)
+				
+			}
+			
+			function drawRegularPolygon(canvas,location,radius,sides, rotation=0){
+				var ctx = canvas.getContext("2d");
+				ctx.beginPath();
+				var x=location[0]+Math.cos(0+rotation)*radius;
+				var y=location[1]+Math.sin(0+rotation)*radius;
+				ctx.moveTo(x, y);
+				sides/=2;
+				for(var i=Math.PI/sides;i<=Math.PI*2;i+=Math.PI/sides){
+					var x=location[0]+Math.cos(i+rotation)*radius;
+					var y=location[1]+Math.sin(i+rotation)*radius;
+					ctx.lineTo(x, y);
+				}
+				var x=location[0]+Math.cos(0+rotation)*radius;
+				var y=location[1]+Math.sin(0+rotation)*radius;
+				ctx.lineTo(x, y);
+				
+				ctx.stroke();
+			}
+			
+		</script>
