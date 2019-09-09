@@ -1,18 +1,24 @@
 const drops = [];
 const dropAmount = 900;
+
+const tree = [];
 function main() {
   const canvas = initializeCanvas("canvasA", 600, 500);
   const params = generateRandomParameters();
   for (let i = 0; i < dropAmount; i++) {
     drops[i] = new Drop(canvas, params);
   }
+  tree[0] = new Branch(canvas, canvas.height, canvas.height - 50);
   // Main Loop
   window.setInterval(() => {
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    for (var i = 0; i < drops.length; i++) {      
-      drops[i].fall();
-      drops[i].show();
-    }    
+    // for (let i = 0; i < drops.length; i++) {      
+    //   drops[i].fall();
+    //   drops[i].show();
+    // }    
+    for (const i in tree) {
+      tree[i].show;
+    }
   }, 50);
 }
 
